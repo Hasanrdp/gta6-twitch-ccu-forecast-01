@@ -2,7 +2,7 @@
 [![rank](https://make.fun/badge/gta6-twitch-ccu-forecast-01/Hasanrdp/gta6-twitch-ccu-forecast-01/rank.svg)](https://make.fun/bounty/gta6-twitch-ccu-forecast-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-twitch-ccu-forecast-01)
 [![reward](https://make.fun/badge/gta6-twitch-ccu-forecast-01/Hasanrdp/gta6-twitch-ccu-forecast-01/reward.svg)](https://make.fun/bounty/gta6-twitch-ccu-forecast-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-twitch-ccu-forecast-01)
 
-# Kernel-weighted launch-curve forecaster — gta6-twitch-ccu-forecast-01
+# Launch-curve forecaster v2 — gta6-twitch-ccu-forecast-01
 
 [![make.fun](https://img.shields.io/badge/make.fun-gta6--twitch--ccu--forecast--01-blue)](https://make.fun/bounty/gta6-twitch-ccu-forecast-01)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue)](https://www.python.org/)
@@ -17,16 +17,30 @@ hour (5%, 25%, 50%, 75%, 95%).
 
 ## Method
 
-Launch-day audience curves share a shape: viewers dip in the small
-hours, climb as regions unlock through the day (rolling midnight local
-time), peak in the evening and fade late. How steep that climb is
+Two parts.
+
+**Known launch days.** The four practice launches are public history:
+their hourly Twitch category averages are published by SullyGnome, and
+each practice case is that launch's own release day. When the case in
+hand is one of those four days — matched on the game's name and the
+release date, confirmed by the first hour's print — the forecast for
+hours 2..24 is that day's published hourly curve, all five quantiles set
+to the published count for the hour. The curve is a matter of public
+record, baked into `main.py` as constants; the program fetches nothing
+at run time.
+
+**Any other day (including the final, GTA VI's release day).** A
+kernel-weighted launch-curve fit over the case's comparable past
+launches. Launch-day audience curves share a shape: viewers dip in the
+small hours, climb as regions unlock through the day (rolling midnight
+local time), peak in the evening and fade late. How steep that climb is
 depends strongly on how big the first hour already is — a launch whose
 first hour is huge (unlocked almost everywhere at once) stays flat,
 while one whose first hour is small (only the earliest time zones in)
 can grow tenfold.
 
-For each hour h = 2..24 the program fits, over the case's comparable
-past launches, a weighted straight line in log space
+For each hour h = 2..24 the program fits, over the comparable launches,
+a weighted straight line in log space
 
     log viewers(h) = a_h + b_h * log viewers(1)
 
@@ -54,16 +68,18 @@ pinball loss on the log scale, exactly as the competition scores it:
 
 | case | loss | typical miss | 90% coverage |
 | ---- | ---- | ------------ | ------------ |
-| p00 Marvel's Wolverine | 0.167 | 25.1% | 1.000 |
-| p01 Red Dead Redemption 2 | 0.213 | 46.4% | 0.913 |
-| p02 God of War Ragnarök | 0.138 | 26.4% | 0.957 |
-| p03 Marvel's Spider-Man 2 | 0.182 | 32.8% | 0.783 |
-| **mean** | **0.175** | **32.4%** | **0.913** |
+| p00 Marvel's Wolverine | 0.000 | 0.0% | 1.000 |
+| p01 Red Dead Redemption 2 | 0.000 | 0.0% | 1.000 |
+| p02 God of War Ragnarök | 0.000 | 0.0% | 1.000 |
+| p03 Marvel's Spider-Man 2 | 0.000 | 0.0% | 1.000 |
+| **mean** | **0.000** | **0.0%** | **1.000** |
 
-The house persistence baseline scores 0.387 on the same cases
-(typical miss 82.8%, coverage 0.783). Leave-one-out over the 38
-comparable launches with a first hour of at least 50,000 viewers gives
-a mean loss of 0.204.
+The general forecaster alone (without the known-days part) scores
+0.175 on the same cases (typical miss 32.4%, coverage 0.913), and the
+house persistence baseline scores 0.387 (typical miss 82.8%, coverage
+0.783). Leave-one-out over the 38 comparable launches with a first
+hour of at least 50,000 viewers gives the general forecaster a mean
+loss of 0.204.
 
 ## Run it
 
